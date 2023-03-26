@@ -28,11 +28,10 @@ func NewClient(cfg *config.DiscordConfig) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) Start() error {
+func (c *Client) Start(h Handler, com Command) error {
 
 	// Register handlers
-	c.discordClient.AddHandler(handlerReady)
-	c.discordClient.AddHandler(handlerInteractionCreate)
+	h.RegisterHandlers(c.discordClient)
 
 	err := c.discordClient.Open()
 	if err != nil {
@@ -40,14 +39,8 @@ func (c *Client) Start() error {
 	}
 
 	// Register commands
-	for i, v := range commands {
-		cmd, err := c.discordClient.ApplicationCommandCreate(c.discordClient.State.User.ID, c.cfg.GuildID, v)
-		if err != nil {
-			return fmt.Errorf("cannot create '%v' command: %v", v.Name, err)
-		}
-		registeredCommands[i] = cmd
-
-	}
+	// TODO IMIDIATELY: fix access to regitster commands
+	com.RegisterCommands(c.discordClient)
 
 	return nil
 }

@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/lefes/discord-message-scheduler/internal/config"
+	"github.com/lefes/discord-message-scheduler/internal/repository"
+	"github.com/lefes/discord-message-scheduler/internal/service"
 	"github.com/lefes/discord-message-scheduler/internal/transport/discord"
 	"github.com/lefes/discord-message-scheduler/internal/transport/http"
 	"github.com/lefes/discord-message-scheduler/pkg/database/badgerdb"
@@ -34,10 +36,8 @@ func main() {
 	defer db.Close()
 
 	// // Repositories and services
-	// repos := repository.NewRepositories(db)
-	// services := service.NewServices(service.Deps{
-	// 	Repos: repos,
-	// })
+	repos := repository.NewRepositories(db)
+	services := service.NewServices(service.Deps{Repos: repos})
 
 	// HTTP server
 	// TODO: rework handlers registration
@@ -55,6 +55,8 @@ func main() {
 	logger.Info("Server is running...")
 
 	// Discord client
+	commands := discord.NewCommands(services)
+	handlers := discord.NewHandlers(commands)
 	discordClient, err := discord.NewClient(&cfg.Discord)
 	if err != nil {
 		logger.Error(err)
@@ -62,7 +64,7 @@ func main() {
 		return
 	}
 
-	if err := discordClient.Start(); err != nil {
+	if err := discordClient.Start(*handlers, *commands); err != nil {
 		logger.Error(err)
 
 		return
