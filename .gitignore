@@ -124,3 +124,9 @@ fabric.properties
 
 # Badger
 data/
+
+# MacOS
+.DS_Store
+
+# Go
+bin/
